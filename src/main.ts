@@ -7,9 +7,16 @@ import "dotenv/config";
 import { Reflector } from "@nestjs/core";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import open from "open";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  });
 
   const config = new DocumentBuilder()
     .setTitle("Cats example")
@@ -31,6 +38,10 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix("api");
 
-  await app.listen(process.env.PORT ?? 3000);
+  if (process.env.NODE_ENV !== "production") {
+    await open(`http://localhost:${process.env.PORT}/api/docs`);
+  }
+
+  await app.listen(process.env.PORT!);
 }
 void bootstrap();
