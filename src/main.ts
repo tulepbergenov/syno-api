@@ -32,7 +32,7 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
