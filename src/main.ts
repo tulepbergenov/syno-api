@@ -7,7 +7,7 @@ import "dotenv/config";
 import { Reflector } from "@nestjs/core";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import open from "open";
+import { PrismaExceptionFilter } from "./common/filters/prisma-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,7 +19,7 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle("Cats example")
+    .setTitle("Syno Api")
     .setDescription("The cats API description")
     .setVersion("1.0")
     .addTag("cats")
@@ -35,12 +35,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new ResponseInterceptor());
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
   app.setGlobalPrefix("api");
-
-  if (process.env.NODE_ENV !== "production") {
-    await open(`http://localhost:${process.env.PORT}/api/docs`);
-  }
 
   await app.listen(process.env.PORT!);
 }
