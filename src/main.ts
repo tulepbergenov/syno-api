@@ -8,6 +8,7 @@ import { Reflector } from "@nestjs/core";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { PrismaExceptionFilter } from "./common/filters/prisma-exception.filter";
+import cookieParser from "cookie-parser";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,9 +21,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle("Syno Api")
-    .setDescription("The cats API description")
     .setVersion("1.0")
-    .addTag("cats")
+    .addBearerAuth()
+    .addCookieAuth("refreshToken")
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
@@ -32,6 +33,7 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
 
+  app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new ResponseInterceptor());
