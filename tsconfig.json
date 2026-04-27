@@ -21,7 +21,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+
+    /* Aliases */
+    "paths": {
+      "@core/*": ["src/core/*"],
+      "@modules/*": ["src/modules/*"],
+      "@generated/*": ["generated/*"]
+    }
   },
   "include": ["src/**/*"]
 }

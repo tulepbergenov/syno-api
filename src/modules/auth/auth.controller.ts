@@ -10,10 +10,10 @@ import {
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
-import { Public } from "../common/decorators/public.decorator";
+import { Public } from "@core/common/decorators/public.decorator";
 import type { Request, Response } from "express";
 import { LoginDto } from "./dto/login.dto";
-import type { AuthenticatedRequest } from "../common/interfaces/authenticated-request.interface";
+import type { AuthenticatedRequest } from "@core/common/interfaces/authenticated-request.interface";
 import {
   ApiBearerAuth,
   ApiBody,

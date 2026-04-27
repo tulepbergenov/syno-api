@@ -1,13 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { ResponseInterceptor } from "./common/interceptors/response.interceptor";
-import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
+import { ResponseInterceptor } from "@core/common/interceptors/response.interceptor";
+import { HttpExceptionFilter } from "@core/common/filters/http-exception.filter";
 import { ValidationPipe } from "@nestjs/common";
 import "dotenv/config";
 import { Reflector } from "@nestjs/core";
-import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
+import { JwtAuthGuard } from "@core/common/guards/jwt-auth.guard";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { PrismaExceptionFilter } from "./common/filters/prisma-exception.filter";
+import { PrismaExceptionFilter } from "@core/common/filters/prisma-exception.filter";
 import cookieParser from "cookie-parser";
 
 async function bootstrap() {

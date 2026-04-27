@@ -1,13 +1,13 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { UsersService } from "../users/users.service";
+import { UsersService } from "@modules/users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import { RegisterDto } from "./dto/register.dto";
 import * as bcrypt from "bcrypt";
 import { LoginDto } from "./dto/login.dto";
 import { ConfigService } from "@nestjs/config";
-import { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from "@core/prisma/prisma.service";
 import { randomUUID } from "crypto";
-import { EnvConfig } from "../config/env.interface";
+import { EnvConfig } from "@core/config/env.interface";
 
 interface SessionMeta {
   userAgent?: string;
