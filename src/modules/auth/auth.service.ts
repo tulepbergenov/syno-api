@@ -9,10 +9,10 @@ import { PrismaService } from "@core/prisma/prisma.service";
 import { randomUUID } from "crypto";
 import { EnvConfig } from "@core/config/env.interface";
 
-interface SessionMeta {
+type SessionMeta = {
   userAgent?: string;
   ipAddress?: string;
-}
+};
 
 @Injectable()
 export class AuthService {
@@ -53,8 +53,35 @@ export class AuthService {
     });
     if (!session) throw new UnauthorizedException("Invalid refresh token");
 
-    await this.prisma.session.delete({ where: { id: session.id } });
-    return this.createSession(session.user.id, session.user.email, meta);
+    if (session.expiresAt <= new Date()) {
+      await this.prisma.session
+        .delete({ where: { id: session.id } })
+        .catch(() => null);
+      throw new UnauthorizedException("Refresh token expired");
+    }
+
+    const nextRefreshToken = this.createRefreshToken();
+    const expiresAt = this.buildRefreshExpiryDate();
+
+    const rotated = await this.prisma.session.updateMany({
+      where: { id: session.id, refreshToken },
+      data: {
+        refreshToken: nextRefreshToken,
+        userAgent: meta.userAgent,
+        ipAddress: meta.ipAddress,
+        expiresAt,
+      },
+    });
+
+    if (rotated.count === 0)
+      throw new UnauthorizedException("Refresh token already rotated");
+
+    const accessToken = this.createAccessToken(
+      session.user.id,
+      session.user.email,
+    );
+
+    return { accessToken, refreshToken: nextRefreshToken };
   }
 
   async logout(refreshToken: string) {
@@ -93,11 +120,8 @@ export class AuthService {
     email: string,
     meta: SessionMeta,
   ) {
-    const refreshToken = randomUUID() + randomUUID();
-    const refreshExpiresDays = 30;
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + refreshExpiresDays);
+    const refreshToken = this.createRefreshToken();
+    const expiresAt = this.buildRefreshExpiryDate();
 
     await this.prisma.session.create({
       data: {
@@ -109,14 +133,29 @@ export class AuthService {
       },
     });
 
-    const accessToken = this.jwtService.sign(
+    const accessToken = this.createAccessToken(userId, email);
+
+    return { accessToken, refreshToken };
+  }
+
+  private createRefreshToken() {
+    return randomUUID() + randomUUID();
+  }
+
+  private buildRefreshExpiryDate() {
+    const refreshExpiresDays = 30;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + refreshExpiresDays);
+    return expiresAt;
+  }
+
+  private createAccessToken(userId: string, email: string) {
+    return this.jwtService.sign(
       { sub: userId, email },
       {
         secret: this.config.get("JWT_ACCESS_SECRET"),
         expiresIn: this.config.get("JWT_ACCESS_EXPIRES_IN"),
       },
     );
-
-    return { accessToken, refreshToken };
   }
 }

@@ -82,7 +82,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE];
+    const refreshToken = this.getRefreshTokenFromCookies(req);
     const tokens = await this.authService.refresh(
       refreshToken,
       this.getMeta(req),
@@ -98,7 +98,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE];
+    const refreshToken = this.getRefreshTokenFromCookies(req);
     await this.authService.logout(refreshToken);
     res.clearCookie(REFRESH_COOKIE);
     return { success: true };
@@ -199,5 +199,11 @@ export class AuthController {
       userAgent: req.headers["user-agent"],
       ipAddress: req.ip,
     };
+  }
+
+  private getRefreshTokenFromCookies(req: Request) {
+    const cookies = req.cookies as Record<string, unknown> | undefined;
+    const value = cookies?.[REFRESH_COOKIE];
+    return typeof value === "string" ? value : "";
   }
 }
