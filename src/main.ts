@@ -9,7 +9,7 @@ import { JwtAuthGuard } from "@core/common/guards/jwt-auth.guard";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { PrismaExceptionFilter } from "@core/common/filters/prisma-exception.filter";
 import cookieParser from "cookie-parser";
-
+import { apiReference } from "@scalar/nestjs-api-reference";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -40,6 +40,12 @@ async function bootstrap() {
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
+  app.use(
+    "/api/docs/reference",
+    apiReference({
+      content: documentFactory,
+    }),
+  );
 
   await app.listen(process.env.PORT!);
 }
