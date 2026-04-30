@@ -34,7 +34,7 @@ export class MeService {
       await this.minio.removeObject(bucket, user.avatarUrl).catch(() => null);
     }
 
-    const fileName = `${userId}-${Date.now()}-${file.originalname}`;
+    const fileName = `${userId}/avatar/${Date.now()}-${file.originalname}`;
 
     await this.minio.putObject(bucket, fileName, file.buffer, file.size);
 
