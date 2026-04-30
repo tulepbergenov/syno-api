@@ -14,16 +14,18 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  username  String    @unique
-  firstName String
-  lastName  String?
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  sessions  Session[]
+  id             String    @id @default(uuid())
+  email          String    @unique
+  username       String    @unique
+  firstName      String
+  lastName       String?
+  password       String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  sessions       Session[]
+  avatarUrl      String?
+  avatarFileName String?
 
   @@map("users")
 }

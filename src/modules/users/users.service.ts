@@ -24,4 +24,27 @@ export class UsersService {
   async create(data: Prisma.UserCreateInput) {
     return this.prisma.user.create({ data });
   }
+
+  async update(id: string, data: Prisma.UserUpdateInput) {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      omit: { password: true },
+    });
+  }
+
+  async updatePassword(id: string, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+  }
+
+  async updateAvatar(id: string, avatarUrl: string | null) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { avatarUrl },
+      omit: { password: true },
+    });
+  }
 }

@@ -28,7 +28,8 @@
       "@core/*": ["src/core/*"],
       "@modules/*": ["src/modules/*"],
       "@generated/*": ["generated/*"]
-    }
+    },
+    "types": ["node", "Multer"]
   },
   "include": ["src/**/*"]
 }
