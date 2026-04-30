@@ -19,6 +19,8 @@ async function bootstrap() {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   });
 
+  app.setGlobalPrefix("api");
+
   const config = new DocumentBuilder()
     .setTitle("Syno Api")
     .setVersion("1.0")
@@ -38,7 +40,6 @@ async function bootstrap() {
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
-  app.setGlobalPrefix("api");
 
   await app.listen(process.env.PORT!);
 }

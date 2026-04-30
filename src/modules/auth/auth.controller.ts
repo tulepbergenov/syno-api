@@ -19,9 +19,20 @@ import {
   ApiBody,
   ApiCookieAuth,
   ApiOperation,
-  ApiResponse,
+  ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
+import {
+  ApiErrorResponse,
+  ApiWrappedResponse,
+} from "@core/common/swagger/api-response.decorator";
+import {
+  AccessTokenDto,
+  LogoutResponseDto,
+  RefreshTokenDto,
+  SessionDto,
+  TokenPairDto,
+} from "./dto/auth-swagger.dto";
 
 const REFRESH_COOKIE = "refreshToken";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
@@ -35,12 +46,18 @@ export class AuthController {
 
   @Public()
   @Post("sign-up")
-  @ApiOperation({ summary: "Register new user (web)" })
-  @ApiResponse({
-    status: 201,
-    description: "Returns accessToken, sets refreshToken httpOnly cookie",
+  @ApiOperation({
+    summary: "Register new user (web)",
+    description:
+      "Creates a user, opens a session, returns accessToken in body and sets refreshToken as an httpOnly cookie.",
   })
-  @ApiResponse({ status: 409, description: "Email or username already taken" })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "User registered. Refresh token is set in cookie.",
+    type: AccessTokenDto,
+  })
+  @ApiErrorResponse(400, "Validation failed")
+  @ApiErrorResponse(409, "Email or username already taken")
   async signUp(
     @Body() dto: RegisterDto,
     @Req() req: Request,
@@ -53,12 +70,18 @@ export class AuthController {
 
   @Public()
   @Post("sign-in")
-  @ApiOperation({ summary: "Login (web)" })
-  @ApiResponse({
-    status: 201,
-    description: "Returns accessToken, sets refreshToken httpOnly cookie",
+  @ApiOperation({
+    summary: "Login (web)",
+    description:
+      "Authenticates by email and password, returns accessToken in body and sets refreshToken as an httpOnly cookie.",
   })
-  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "User authenticated. Refresh token is set in cookie.",
+    type: AccessTokenDto,
+  })
+  @ApiErrorResponse(400, "Validation failed")
+  @ApiErrorResponse(401, "Invalid credentials")
   async signIn(
     @Body() dto: LoginDto,
     @Req() req: Request,
@@ -72,12 +95,17 @@ export class AuthController {
   @Public()
   @ApiCookieAuth("refreshToken")
   @Post("refresh")
-  @ApiOperation({ summary: "Refresh access token (web, reads cookie)" })
-  @ApiResponse({
-    status: 201,
-    description: "Returns new accessToken, rotates refreshToken",
+  @ApiOperation({
+    summary: "Refresh access token (web)",
+    description:
+      "Reads refreshToken from cookie, rotates it and returns a fresh accessToken.",
   })
-  @ApiResponse({ status: 401, description: "Invalid or expired refresh token" })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "Access token refreshed. Refresh token is rotated in cookie.",
+    type: AccessTokenDto,
+  })
+  @ApiErrorResponse(401, "Invalid or expired refresh token")
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -92,8 +120,19 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @ApiCookieAuth("refreshToken")
   @Post("sign-out")
-  @ApiOperation({ summary: "Logout current session (web)" })
+  @ApiOperation({
+    summary: "Logout current session (web)",
+    description:
+      "Deletes the current session by refreshToken cookie and clears the cookie.",
+  })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "Current session closed.",
+    type: LogoutResponseDto,
+  })
+  @ApiErrorResponse(401, "Unauthorized")
   async signOut(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -108,32 +147,55 @@ export class AuthController {
 
   @Public()
   @Post("mobile/sign-up")
-  @ApiOperation({ summary: "Register new user (mobile)" })
-  @ApiResponse({
-    status: 201,
-    description: "Returns accessToken and refreshToken in body",
+  @ApiOperation({
+    summary: "Register new user (mobile)",
+    description:
+      "Creates a user and returns both accessToken and refreshToken in response body.",
   })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "User registered and mobile token pair returned.",
+    type: TokenPairDto,
+  })
+  @ApiErrorResponse(400, "Validation failed")
+  @ApiErrorResponse(409, "Email or username already taken")
   mobileSignUp(@Body() dto: RegisterDto, @Req() req: Request) {
     return this.authService.register(dto, this.getMeta(req));
   }
 
   @Public()
   @Post("mobile/sign-in")
-  @ApiOperation({ summary: "Login (mobile)" })
+  @ApiOperation({
+    summary: "Login (mobile)",
+    description:
+      "Authenticates by email and password and returns both accessToken and refreshToken in response body.",
+  })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "User authenticated and mobile token pair returned.",
+    type: TokenPairDto,
+  })
+  @ApiErrorResponse(400, "Validation failed")
+  @ApiErrorResponse(401, "Invalid credentials")
   mobileSignIn(@Body() dto: LoginDto, @Req() req: Request) {
     return this.authService.login(dto, this.getMeta(req));
   }
 
   @Public()
   @Post("mobile/refresh")
-  @ApiOperation({ summary: "Refresh access token (mobile)" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: { refreshToken: { type: "string" } },
-      required: ["refreshToken"],
-    },
+  @ApiOperation({
+    summary: "Refresh access token (mobile)",
+    description:
+      "Rotates refreshToken from request body and returns a fresh token pair.",
   })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "Mobile token pair refreshed.",
+    type: TokenPairDto,
+  })
+  @ApiErrorResponse(400, "Validation failed")
+  @ApiErrorResponse(401, "Invalid or expired refresh token")
   mobileRefresh(
     @Body("refreshToken") refreshToken: string,
     @Req() req: Request,
@@ -143,14 +205,17 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Post("mobile/sign-out")
-  @ApiOperation({ summary: "Logout current session (mobile)" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: { refreshToken: { type: "string" } },
-      required: ["refreshToken"],
-    },
+  @ApiOperation({
+    summary: "Logout current session (mobile)",
+    description: "Deletes the mobile session associated with refreshToken.",
   })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "Current mobile session closed.",
+  })
+  @ApiErrorResponse(400, "Validation failed")
+  @ApiErrorResponse(401, "Unauthorized")
   mobileSignOut(@Body("refreshToken") refreshToken: string) {
     return this.authService.logout(refreshToken);
   }
@@ -159,7 +224,16 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Post("sign-out-all")
-  @ApiOperation({ summary: "Logout from all devices" })
+  @ApiOperation({
+    summary: "Logout from all devices",
+    description:
+      "Deletes every active session of the authenticated user and clears the web refresh cookie.",
+  })
+  @ApiWrappedResponse({
+    status: 201,
+    description: "All sessions closed.",
+  })
+  @ApiErrorResponse(401, "Unauthorized")
   signOutAll(
     @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
@@ -170,14 +244,39 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Get("sessions")
-  @ApiOperation({ summary: "Get all active sessions of current user" })
+  @ApiOperation({
+    summary: "Get active sessions",
+    description:
+      "Returns all active sessions for the authenticated user ordered by creation date descending.",
+  })
+  @ApiWrappedResponse({
+    status: 200,
+    description: "Active sessions returned.",
+    type: SessionDto,
+    isArray: true,
+  })
+  @ApiErrorResponse(401, "Unauthorized")
   getSessions(@Req() req: AuthenticatedRequest) {
     return this.authService.getSessions(req.user.id);
   }
 
   @ApiBearerAuth()
   @Delete("sessions/:id")
-  @ApiOperation({ summary: "Revoke specific session by id" })
+  @ApiOperation({
+    summary: "Revoke session",
+    description:
+      "Deletes one session by id. Only sessions owned by the authenticated user can be revoked.",
+  })
+  @ApiParam({
+    name: "id",
+    example: "0f7a9a21-8e2b-4f83-9e87-9f2d4b0f2db3",
+    description: "Session id to revoke.",
+  })
+  @ApiWrappedResponse({
+    status: 200,
+    description: "Session revoked.",
+  })
+  @ApiErrorResponse(401, "Unauthorized")
   revokeSession(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
     return this.authService.revokeSession(req.user.id, id);
   }
