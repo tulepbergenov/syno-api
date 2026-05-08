@@ -19,7 +19,14 @@ export class MeService {
     if (!user) {
       return user;
     }
-    const { avatarUrl, avatarFileName, ...profile } = user;
+    const {
+      avatarUrl,
+      avatarFileName,
+      createdAt,
+      updatedAt,
+      deletedAt,
+      ...profile
+    } = user;
     if (!avatarUrl) {
       return { ...profile, avatar: null };
     }

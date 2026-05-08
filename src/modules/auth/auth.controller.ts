@@ -1,19 +1,19 @@
+import { Public } from "@core/common/decorators/public.decorator";
+import type { AuthenticatedRequest } from "@core/common/interfaces/authenticated-request.interface";
 import {
-  Post,
-  Req,
-  Delete,
+  ApiErrorResponse,
+  ApiWrappedResponse,
+} from "@core/common/swagger/api-response.decorator";
+import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Post,
+  Req,
   Res,
 } from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { RegisterDto } from "./dto/register.dto";
-import { Public } from "@core/common/decorators/public.decorator";
-import type { Request, Response } from "express";
-import { LoginDto } from "./dto/login.dto";
-import type { AuthenticatedRequest } from "@core/common/interfaces/authenticated-request.interface";
 import {
   ApiBearerAuth,
   ApiBody,
@@ -22,10 +22,8 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import {
-  ApiErrorResponse,
-  ApiWrappedResponse,
-} from "@core/common/swagger/api-response.decorator";
+import type { Request, Response } from "express";
+import { AuthService } from "./auth.service";
 import {
   AccessTokenDto,
   LogoutResponseDto,
@@ -33,6 +31,8 @@ import {
   SessionDto,
   TokenPairDto,
 } from "./dto/auth-swagger.dto";
+import { LoginDto } from "./dto/login.dto";
+import { RegisterDto } from "./dto/register.dto";
 
 const REFRESH_COOKIE = "refreshToken";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
@@ -227,19 +227,16 @@ export class AuthController {
   @ApiOperation({
     summary: "Logout from all devices",
     description:
-      "Deletes every active session of the authenticated user and clears the web refresh cookie.",
+      "Deletes all active sessions of the authenticated user except the current one identified by refreshToken cookie.",
   })
   @ApiWrappedResponse({
     status: 201,
-    description: "All sessions closed.",
+    description: "All other sessions closed.",
   })
   @ApiErrorResponse(401, "Unauthorized")
-  signOutAll(
-    @Req() req: AuthenticatedRequest,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    res.clearCookie(REFRESH_COOKIE);
-    return this.authService.logoutAll(req.user.id);
+  signOutAll(@Req() req: AuthenticatedRequest) {
+    const refreshToken = this.getRefreshTokenFromCookies(req);
+    return this.authService.logoutAll(req.user.id, refreshToken);
   }
 
   @ApiBearerAuth()

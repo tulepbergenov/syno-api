@@ -91,8 +91,26 @@ export class AuthService {
       .catch(() => null);
   }
 
-  async logoutAll(userId: string) {
-    await this.prisma.session.deleteMany({ where: { userId } });
+  async logoutAll(userId: string, currentRefreshToken: string) {
+    if (!currentRefreshToken) {
+      throw new UnauthorizedException("No refresh token");
+    }
+
+    const currentSession = await this.prisma.session.findFirst({
+      where: { userId, refreshToken: currentRefreshToken },
+      select: { id: true },
+    });
+
+    if (!currentSession) {
+      throw new UnauthorizedException("Invalid refresh token");
+    }
+
+    await this.prisma.session.deleteMany({
+      where: {
+        userId,
+        id: { not: currentSession.id },
+      },
+    });
   }
 
   async getSessions(userId: string) {
