@@ -17,7 +17,7 @@ export class MeService {
     if (!user) {
       return user;
     }
-    const { avatarUrl, avatarFileName } = user;
+    const { avatarUrl } = user;
     const profile = {
       id: user.id,
       email: user.email,
@@ -26,7 +26,7 @@ export class MeService {
       lastName: user.lastName,
     };
     if (!avatarUrl) {
-      return { ...profile, avatar: null };
+      return { ...profile, avatarUrl: null };
     }
 
     const url = await this.minio.presignedGetObject(
@@ -34,17 +34,9 @@ export class MeService {
       avatarUrl,
       24 * 3600,
     );
-    const stat = await this.minio
-      .statObject("avatars", avatarUrl)
-      .catch(() => null);
-
     return {
       ...profile,
-      avatar: {
-        name: avatarFileName ?? this.extractFileName(avatarUrl),
-        size: typeof stat?.size === "number" ? stat.size : null,
-        url,
-      },
+      avatarUrl: url,
     };
   }
 
@@ -89,13 +81,7 @@ export class MeService {
       24 * 3600,
     );
 
-    return {
-      avatar: {
-        name: file.originalname,
-        size: file.size,
-        url,
-      },
-    };
+    return { avatarUrl: url };
   }
 
   async deleteAvatar(userId: string) {
@@ -117,9 +103,5 @@ export class MeService {
     if (!exists) {
       await this.minio.makeBucket(bucket, "us-east-1");
     }
-  }
-
-  private extractFileName(objectKey: string): string {
-    return objectKey.split("/").at(-1) ?? objectKey;
   }
 }

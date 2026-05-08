@@ -47,7 +47,7 @@ export class MeController {
   @ApiOperation({
     summary: "Get current user profile",
     description:
-      "Returns the authenticated user's profile. If an avatar exists, the response includes an avatar object with name, size and a presigned URL valid for 24 hours.",
+      "Returns the authenticated user's profile. If an avatar exists, avatarUrl is returned as a presigned URL valid for 24 hours.",
   })
   @ApiWrappedResponse({
     status: 200,
@@ -92,7 +92,7 @@ export class MeController {
   @ApiOperation({
     summary: "Upload current user avatar",
     description:
-      "Uploads an avatar image to object storage, removes the previous avatar if it exists and returns avatar metadata with a presigned URL.",
+      "Uploads an avatar image to object storage, removes the previous avatar if it exists and returns a presigned avatar URL.",
   })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
