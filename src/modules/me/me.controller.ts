@@ -1,5 +1,8 @@
 import {
   Body,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
   Controller,
   Delete,
   Get,
@@ -26,6 +29,10 @@ import {
 } from "@core/common/swagger/api-response.decorator";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { AvatarResponseDto, UserProfileDto } from "./dto/me-swagger.dto";
+import {
+  AVATAR_ALLOWED_MIME_REGEX,
+  AVATAR_MAX_BYTES,
+} from "./avatar.constants";
 
 @ApiTags("Me")
 @ApiBearerAuth()
@@ -40,7 +47,7 @@ export class MeController {
   @ApiOperation({
     summary: "Get current user profile",
     description:
-      "Returns the authenticated user's profile. If an avatar exists, avatarUrl is returned as a presigned URL valid for 24 hours.",
+      "Returns the authenticated user's profile. If an avatar exists, the response includes an avatar object with name, size and a presigned URL valid for 24 hours.",
   })
   @ApiWrappedResponse({
     status: 200,
@@ -77,11 +84,15 @@ export class MeController {
   }
 
   @Post("avatar")
-  @UseInterceptors(FileInterceptor("avatar"))
+  @UseInterceptors(
+    FileInterceptor("avatar", {
+      limits: { fileSize: AVATAR_MAX_BYTES },
+    }),
+  )
   @ApiOperation({
     summary: "Upload current user avatar",
     description:
-      "Uploads an avatar image to object storage, removes the previous avatar if it exists and returns a presigned URL.",
+      "Uploads an avatar image to object storage, removes the previous avatar if it exists and returns avatar metadata with a presigned URL.",
   })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -106,7 +117,16 @@ export class MeController {
   @ApiErrorResponse(401, "Unauthorized")
   uploadAvatar(
     @Req() req: AuthenticatedRequest,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: true,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: AVATAR_MAX_BYTES }),
+          new FileTypeValidator({ fileType: AVATAR_ALLOWED_MIME_REGEX }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
   ) {
     return this.meService.uploadAvatar(req.user.id, file);
   }
@@ -115,12 +135,11 @@ export class MeController {
   @ApiOperation({
     summary: "Delete current user avatar",
     description:
-      "Removes the authenticated user's avatar from object storage when present and clears avatarUrl on the profile.",
+      "Removes the authenticated user's avatar from object storage when present and clears avatar fields on the profile.",
   })
   @ApiWrappedResponse({
     status: 200,
-    description: "Avatar deleted and profile returned.",
-    type: UserProfileDto,
+    description: "Avatar deleted.",
   })
   @ApiErrorResponse(401, "Unauthorized")
   @ApiErrorResponse(404, "User not found")

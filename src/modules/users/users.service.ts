@@ -40,10 +40,14 @@ export class UsersService {
     });
   }
 
-  async updateAvatar(id: string, avatarUrl: string | null) {
+  async updateAvatar(
+    id: string,
+    avatarUrl: string | null,
+    avatarFileName: string | null,
+  ) {
     return this.prisma.user.update({
       where: { id },
-      data: { avatarUrl },
+      data: { avatarUrl, avatarFileName },
       omit: { password: true },
     });
   }
