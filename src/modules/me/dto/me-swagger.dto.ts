@@ -62,7 +62,6 @@ export class UserProfileDto {
     description: "Avatar metadata and presigned URL.",
   })
   avatar: AvatarDto | null;
-
 }
 
 export class AvatarResponseDto {

@@ -1,11 +1,16 @@
+import { type AuthenticatedRequest } from "@core/common/interfaces/authenticated-request.interface";
+import {
+  ApiErrorResponse,
+  ApiWrappedResponse,
+} from "@core/common/swagger/api-response.decorator";
 import {
   Body,
-  ParseFilePipe,
-  FileTypeValidator,
-  MaxFileSizeValidator,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Patch,
   Post,
   Req,
@@ -13,8 +18,6 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { MeService } from "./me.service";
-import { UsersService } from "../users/users.service";
 import {
   ApiBearerAuth,
   ApiBody,
@@ -22,17 +25,14 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { type AuthenticatedRequest } from "@core/common/interfaces/authenticated-request.interface";
-import {
-  ApiErrorResponse,
-  ApiWrappedResponse,
-} from "@core/common/swagger/api-response.decorator";
-import { UpdateProfileDto } from "./dto/update-profile.dto";
-import { AvatarResponseDto, UserProfileDto } from "./dto/me-swagger.dto";
+import { UsersService } from "../users/users.service";
 import {
   AVATAR_ALLOWED_MIME_REGEX,
   AVATAR_MAX_BYTES,
 } from "./avatar.constants";
+import { AvatarResponseDto, UserProfileDto } from "./dto/me-swagger.dto";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { MeService } from "./me.service";
 
 @ApiTags("Me")
 @ApiBearerAuth()

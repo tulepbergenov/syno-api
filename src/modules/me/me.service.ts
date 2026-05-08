@@ -19,20 +19,19 @@ export class MeService {
     if (!user) {
       return user;
     }
-    const {
-      avatarUrl,
-      avatarFileName,
-      createdAt,
-      updatedAt,
-      deletedAt,
-      ...profile
-    } = user;
+    const { avatarUrl, avatarFileName, ...profile } = user;
     if (!avatarUrl) {
       return { ...profile, avatar: null };
     }
 
-    const url = await this.minio.presignedGetObject("avatars", avatarUrl, 24 * 3600);
-    const stat = await this.minio.statObject("avatars", avatarUrl).catch(() => null);
+    const url = await this.minio.presignedGetObject(
+      "avatars",
+      avatarUrl,
+      24 * 3600,
+    );
+    const stat = await this.minio
+      .statObject("avatars", avatarUrl)
+      .catch(() => null);
 
     return {
       ...profile,
@@ -79,7 +78,11 @@ export class MeService {
 
     await this.usersService.updateAvatar(userId, fileName, file.originalname);
 
-    const url = await this.minio.presignedGetObject(bucket, fileName, 24 * 3600);
+    const url = await this.minio.presignedGetObject(
+      bucket,
+      fileName,
+      24 * 3600,
+    );
 
     return {
       avatar: {
@@ -94,7 +97,9 @@ export class MeService {
     const user = await this.usersService.findById(userId);
 
     if (user?.avatarUrl) {
-      await this.minio.removeObject("avatars", user.avatarUrl).catch(() => null);
+      await this.minio
+        .removeObject("avatars", user.avatarUrl)
+        .catch(() => null);
     }
 
     await this.usersService.updateAvatar(userId, null, null);
