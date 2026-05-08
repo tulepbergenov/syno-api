@@ -1,32 +1,30 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { MINIO_CLIENT } from "@core/minio/minio.constants";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { randomUUID } from "crypto";
 import { Client } from "minio";
-
-import { createMinioClient } from "@core/config/minio.config";
 import { UsersService } from "../users/users.service";
 import { AVATAR_MAX_BYTES, AVATAR_MIME_TO_EXT } from "./avatar.constants";
 
 @Injectable()
 export class MeService {
-  private readonly minio: Client;
-
-  constructor(private readonly usersService: UsersService) {
-    this.minio = createMinioClient();
-  }
+  constructor(
+    private readonly usersService: UsersService,
+    @Inject(MINIO_CLIENT) private readonly minio: Client,
+  ) {}
 
   async getProfile(userId: string) {
     const user = await this.usersService.findById(userId);
     if (!user) {
       return user;
     }
-    const {
-      avatarUrl,
-      avatarFileName,
-      createdAt,
-      updatedAt,
-      deletedAt,
-      ...profile
-    } = user;
+    const { avatarUrl, avatarFileName } = user;
+    const profile = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
     if (!avatarUrl) {
       return { ...profile, avatar: null };
     }

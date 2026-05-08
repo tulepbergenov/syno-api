@@ -24,6 +24,7 @@ import {
 } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import { SessionsService } from "./sessions.service";
 import {
   AccessTokenDto,
   LogoutResponseDto,
@@ -40,7 +41,10 @@ const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private sessionsService: SessionsService,
+  ) {}
 
   // ===== WEB (cookie) =====
 
@@ -138,7 +142,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = this.getRefreshTokenFromCookies(req);
-    await this.authService.logout(refreshToken);
+    await this.sessionsService.logout(refreshToken);
     res.clearCookie(REFRESH_COOKIE);
     return { success: true };
   }
@@ -217,7 +221,7 @@ export class AuthController {
   @ApiErrorResponse(400, "Validation failed")
   @ApiErrorResponse(401, "Unauthorized")
   mobileSignOut(@Body("refreshToken") refreshToken: string) {
-    return this.authService.logout(refreshToken);
+    return this.sessionsService.logout(refreshToken);
   }
 
   // ===== SESSIONS =====
@@ -236,7 +240,10 @@ export class AuthController {
   @ApiErrorResponse(401, "Unauthorized")
   signOutAll(@Req() req: AuthenticatedRequest) {
     const refreshToken = this.getRefreshTokenFromCookies(req);
-    return this.authService.logoutAll(req.user.id, refreshToken);
+    return this.sessionsService.logoutAllExceptCurrent(
+      req.user.id,
+      refreshToken,
+    );
   }
 
   @ApiBearerAuth()
@@ -254,7 +261,8 @@ export class AuthController {
   })
   @ApiErrorResponse(401, "Unauthorized")
   getSessions(@Req() req: AuthenticatedRequest) {
-    return this.authService.getSessions(req.user.id);
+    const refreshToken = this.getRefreshTokenFromCookies(req);
+    return this.sessionsService.getSessions(req.user.id, refreshToken);
   }
 
   @ApiBearerAuth()
@@ -275,7 +283,7 @@ export class AuthController {
   })
   @ApiErrorResponse(401, "Unauthorized")
   revokeSession(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
-    return this.authService.revokeSession(req.user.id, id);
+    return this.sessionsService.revokeSession(req.user.id, id);
   }
 
   // ===== HELPERS =====

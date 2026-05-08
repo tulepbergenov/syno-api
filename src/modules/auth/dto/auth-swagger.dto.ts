@@ -65,4 +65,10 @@ export class SessionDto {
     description: "Refresh token expiration date.",
   })
   expiresAt: Date;
+
+  @ApiProperty({
+    example: true,
+    description: "Whether this session is the current session.",
+  })
+  current: boolean;
 }

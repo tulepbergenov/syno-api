@@ -1,6 +1,6 @@
-declare namespace Express {
+declare module "express-serve-static-core" {
   interface Request {
-    cookies: Record<string, string | undefined>;
+    cookies: Record<string, unknown>;
   }
 }
 

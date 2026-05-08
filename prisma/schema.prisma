@@ -33,7 +33,7 @@ model User {
 model Session {
   id           String   @id @default(uuid())
   userId       String
-  refreshToken String   @unique
+  refreshTokenHash String   @unique
   userAgent    String?
   ipAddress    String?
   expiresAt    DateTime
