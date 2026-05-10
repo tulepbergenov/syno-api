@@ -18,7 +18,7 @@ model User {
   email          String    @unique
   username       String    @unique
   firstName      String
-  lastName       String?
+  lastName       String
   password       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -31,13 +31,13 @@ model User {
 }
 
 model Session {
-  id           String   @id @default(uuid())
-  userId       String
+  id               String   @id @default(uuid())
+  userId           String
   refreshTokenHash String   @unique
-  userAgent    String?
-  ipAddress    String?
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

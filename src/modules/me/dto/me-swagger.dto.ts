@@ -27,11 +27,9 @@ export class UserProfileDto {
 
   @ApiProperty({
     example: "Doe",
-    required: false,
-    nullable: true,
     description: "User last name.",
   })
-  lastName: string | null;
+  lastName: string;
 
   @ApiProperty({
     example: "https://storage.example.com/avatars/avatar.png",

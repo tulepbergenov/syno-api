@@ -8,7 +8,7 @@ import {
   MinLength,
 } from "class-validator";
 
-const USERNAME_REGEX = /^[a-z0-9._-]+$/;
+const USERNAME_REGEX = /^[a-z0-9_]+$/;
 const normalizeTrim = (value: unknown) =>
   typeof value === "string" ? value.trim() : value;
 const normalizeTrimLower = (value: unknown) =>
@@ -17,14 +17,14 @@ const normalizeTrimLower = (value: unknown) =>
 export class UpdateProfileDto {
   @ApiPropertyOptional({
     example: "John",
-    minLength: 2,
+    minLength: 1,
     description: "User first name.",
   })
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => normalizeTrim(value))
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
+  @MinLength(1)
+  @MaxLength(64)
   firstName?: string;
 
   @ApiPropertyOptional({
@@ -34,7 +34,7 @@ export class UpdateProfileDto {
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => normalizeTrim(value))
   @IsString()
-  @MaxLength(50)
+  @MaxLength(64)
   lastName?: string;
 
   @ApiPropertyOptional({
@@ -45,10 +45,9 @@ export class UpdateProfileDto {
   @Transform(({ value }: { value: unknown }) => normalizeTrimLower(value))
   @IsString()
   @MinLength(3)
-  @MaxLength(30)
+  @MaxLength(32)
   @Matches(USERNAME_REGEX, {
-    message:
-      "Username can contain only lowercase letters, numbers, dot, underscore and hyphen",
+    message: "Username can contain only lowercase letters, numbers and underscore",
   })
   username?: string;
 }

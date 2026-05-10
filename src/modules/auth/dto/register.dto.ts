@@ -2,14 +2,13 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import {
   IsEmail,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
 } from "class-validator";
 
-const USERNAME_REGEX = /^[a-z0-9._-]+$/;
+const USERNAME_REGEX = /^[a-z0-9_]+$/;
 const normalizeTrim = (value: unknown) =>
   typeof value === "string" ? value.trim() : value;
 const normalizeTrimLower = (value: unknown) =>
@@ -32,47 +31,40 @@ export class RegisterDto {
   @Transform(({ value }: { value: unknown }) => normalizeTrimLower(value))
   @IsString()
   @MinLength(3)
-  @MaxLength(30)
+  @MaxLength(32)
   @Matches(USERNAME_REGEX, {
     message:
-      "Username can contain only lowercase letters, numbers, dot, underscore and hyphen",
+      "Username can contain only lowercase letters, numbers and underscore",
   })
   username: string;
 
   @ApiProperty({
     example: "John",
-    minLength: 2,
+    minLength: 1,
     description: "User first name.",
   })
   @Transform(({ value }: { value: unknown }) => normalizeTrim(value))
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
+  @MinLength(1)
+  @MaxLength(64)
   firstName: string;
 
   @ApiProperty({
     example: "Doe",
-    required: false,
     description: "User last name.",
   })
   @Transform(({ value }: { value: unknown }) => normalizeTrim(value))
   @IsString()
-  @IsOptional()
-  @MaxLength(50)
-  lastName?: string;
+  @MaxLength(64)
+  lastName: string;
 
   @ApiProperty({
     example: "Password1",
-    minLength: 6,
-    description:
-      "Password must contain at least one uppercase letter and one number.",
+    minLength: 8,
+    description: "User password.",
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(72)
-  @Matches(/^(?=.*[A-Z])(?=.*\d)/, {
-    message:
-      "Password must contain at least one uppercase letter and one number",
-  })
   password: string;
 }
