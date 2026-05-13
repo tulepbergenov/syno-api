@@ -7,21 +7,24 @@ import {
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-interface Response<T> {
+interface SuccessEnvelope {
   success: boolean;
-  data: T;
+  data: unknown;
 }
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
+export class ResponseInterceptor implements NestInterceptor<
+  unknown,
+  SuccessEnvelope
+> {
   intercept(
     context: ExecutionContext,
-    next: CallHandler<T>,
-  ): Observable<Response<T>> {
+    next: CallHandler<unknown>,
+  ): Observable<SuccessEnvelope> {
     return next.handle().pipe(
-      map((data) => ({
+      map((payload: unknown) => ({
         success: true,
-        data,
+        data: payload === undefined ? null : payload,
       })),
     );
   }

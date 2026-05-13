@@ -13,7 +13,11 @@ export function ApiWrappedResponse(options: WrappedResponseOptions) {
     ? options.isArray
       ? { type: "array", items: { $ref: getSchemaPath(options.type) } }
       : { $ref: getSchemaPath(options.type) }
-    : { nullable: true };
+    : {
+        nullable: true,
+        example: null,
+        description: "No payload.",
+      };
 
   return applyDecorators(
     ...(options.type ? [ApiExtraModels(options.type)] : []),

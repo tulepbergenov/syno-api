@@ -27,7 +27,6 @@ import { AuthService } from "./auth.service";
 import { SessionsService } from "./sessions.service";
 import {
   AccessTokenDto,
-  LogoutResponseDto,
   RefreshTokenDto,
   SessionDto,
   TokenPairDto,
@@ -134,7 +133,6 @@ export class AuthController {
   @ApiWrappedResponse({
     status: 201,
     description: "Current session closed.",
-    type: LogoutResponseDto,
   })
   @ApiErrorResponse(401, "Unauthorized")
   async signOut(
@@ -144,7 +142,7 @@ export class AuthController {
     const refreshToken = this.getRefreshTokenFromCookies(req);
     await this.sessionsService.logout(refreshToken);
     res.clearCookie(REFRESH_COOKIE);
-    return { success: true };
+    return null;
   }
 
   // ===== MOBILE (body) =====

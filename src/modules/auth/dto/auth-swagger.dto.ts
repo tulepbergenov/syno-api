@@ -26,11 +26,6 @@ export class RefreshTokenDto {
   refreshToken: string;
 }
 
-export class LogoutResponseDto {
-  @ApiProperty({ example: true })
-  success: boolean;
-}
-
 export class SessionDto {
   @ApiProperty({
     example: "0f7a9a21-8e2b-4f83-9e87-9f2d4b0f2db3",
